@@ -1,36 +1,33 @@
 from TapeSymbol import TapeSymbol
 
+"""
+Class to create the base one limited automata
+
+Parameters:
+# states (Q) - finite set of states
+# current_state - current state of the machine
+# input_alphabet (Σ) - finite input alphabet
+# tape_alphabet (Γ) - finite working alphabet
+# transition_function (δ) - deterministic transition function
+# initial_state (q_0) - initial state (q_0 ∈ Q)
+# accepting_states (F) - set of final states
+# head_position - keeps track of where the machine is currently reading from
+# tape - the tape of the limited automata, represented using a list. Initialised with just end symbols
+# halted - a boolean that determines whether the automata is halted or not
+"""
 class OneLimitedAutomata:
-    """
-    Class to create the base one limited automata
-
-    Parameters:
-    # states (Q) - finite set of states
-    # current_state - current state of the machine
-    # input_alphabet (Σ) - finite input alphabet
-    # tape_alphabet (Γ) - finite working alphabet
-    # transition_function (δ) - deterministic transition function
-    # initial_state (q_0) - initial state (q_0 ∈ Q)
-    # accepting_states (F) - set of final states
-    # head_position - keeps track of where the machine is currently reading from
-    # tape - the tape of the limited automata, represented using a list. Initialised with just end symbols
-    # halted - a boolean that determines whether the automata is halted or not
-    """
-
+    
     def __init__(self, states, input_alphabet, transition_function, initial_state, accepting_states):
         self.halted = False
         self.tape = [TapeSymbol("<"), TapeSymbol(">")]
         self.tape_alphabet = []
-        self.current_state = ""
-        """ 
-        Head position always set to 1. 
-        N.B. 0 is "<" symbol of the tape
-        """
+        self.current_state = "" 
+    
+        # Head position always set to 1. 
+        # N.B. 0 is "<" symbol of the tape
         self.head_position = 1
 
-        """
-        Methods to validate the inputs of the class
-        """
+        # Methods to validate the inputs of the class
         self.states = self.validate_states(states)
         self.input_alphabet = self.validate_input_alphabet(input_alphabet)
         self.tape_alphabet = self.create_tape_alphabet(input_alphabet)
@@ -39,7 +36,6 @@ class OneLimitedAutomata:
         self.transition_function = self.validate_transition_function(transition_function) 
         
         self.set_current_state(initial_state)
-
 
 
     """
@@ -58,7 +54,6 @@ class OneLimitedAutomata:
         return states
         
   
-
     """
     Function that ensures that the input_alphabet is valid according to the following criteria:
     - a list of single character strings
@@ -73,7 +68,6 @@ class OneLimitedAutomata:
         formatted_input_alphabet = list(set(input_alphabet))
         
         return formatted_input_alphabet
-
 
 
     """
@@ -91,7 +85,6 @@ class OneLimitedAutomata:
         return tape_alphabet
 
 
-    
     """
     Function that ensures the initial state is in the set of states
     Return the initial_state if valid
@@ -104,7 +97,6 @@ class OneLimitedAutomata:
             raise ValueError("Initial state not in set of states.")
 
     
-
     """
     Function that checks if each state in the accepting_states is in the set of states
     Returns the accepting_states if all valid
@@ -118,11 +110,10 @@ class OneLimitedAutomata:
         return accepting_states
 
 
-
     """
     Function that takes as input the transition function string input.
     Determines if the input is valid according to the following format:
-    "state space input_alphabet_char . rewrite_tape_symbol movement state,"
+    "state<space>alphabet_char.rewrite_tape_symbol<space>movement<space>state,"
     If valid, the function will return the completed transition_function dictionary
     Otherwise the function will return an error
     """
@@ -157,7 +148,6 @@ class OneLimitedAutomata:
         return resultant_transition_function
 
     
-
     """
     Function that sets the current state
     Called on instantiation of the object to the initial_state
@@ -166,21 +156,10 @@ class OneLimitedAutomata:
         self.current_state = state
             
 
-
-
     """
     Function that returns information about the limited automata
     """
     def return_details(self):
         print(f"""Details of one limited automata:\n\nTape alphabet: {self.tape_alphabet}\nStates: {self.states}\nCurrent state: {self.current_state}\nTransition function: {self.transition_function}\nAccepting states: {self.accepting_states}\nHalted: {self.halted}\nHead position: {self.head_position}
         """)
-
-
-
-
-
-
-
-
-
-        
+                
