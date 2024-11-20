@@ -1,3 +1,4 @@
+from Tape import Tape
 from TapeSymbol import TapeSymbol
 
 """
@@ -17,25 +18,68 @@ Parameters:
 """
 class OneLimitedAutomata:
     
-    def __init__(self, states, input_alphabet, transition_function, initial_state, accepting_states):
+    def __init__(self):
         self.halted = False
-        self.tape = [TapeSymbol("<"), TapeSymbol(">")]
-        self.tape_alphabet = []
-        self.current_state = "" 
-    
-        # Head position always set to 1. 
-        # N.B. 0 is "<" symbol of the tape
-        self.head_position = 1
 
-        # Methods to validate the inputs of the class
-        self.states = self.validate_states(states)
-        self.input_alphabet = self.validate_input_alphabet(input_alphabet)
+        # self.transition_function = self.validate_transition_function(transition_function)
+    
+
+    """
+    Function to input states to the limited automata
+    Will validate the states then assign the states to the LA if valid
+    """
+    def input_states(self, states):
+        self.validate_states(states)
+
+        # Only assigned if no value error raised from above validation
+        self.states = states
+    
+
+    """
+    Function to input input alphabet to the limited automata
+    Will validate the alphabet then assign the alphabet to the LA if valid
+    Also produces the tape_alphabet if valid
+    """
+    def input_input_alphabet(self, input_alphabet):
+        self.validate_input_alphabet(input_alphabet)
+
+        # Only assigned if no value error raised from above validation
+        self.input_alphabet = input_alphabet
+
         self.tape_alphabet = self.create_tape_alphabet(input_alphabet)
-        self.initial_state = self.validate_initial_state(initial_state)
-        self.accepting_states = self.validate_accepting_states(accepting_states)
-        self.transition_function = self.validate_transition_function(transition_function) 
-        
-        self.set_current_state(initial_state)
+
+    
+    """
+    Function to input initial state to the limited automata
+    Will validate the state then assign the initial state to the LA if valid
+    """
+    def input_initial_state(self, state):
+        self.validate_initial_state(state)
+
+        # Only assigned if no value error raised from above validation
+        self.initial_state = state
+
+    
+    """
+    Function to input accepting states to the limited automata
+    Will validate the states then assign the accepting states to the LA if valid
+    """
+    def input_accepting_states(self, states):
+        self.validate_accepting_states(states)
+
+        # Only assigned if no value error raised from above validation
+        self.accepting_states = states
+
+    
+    """
+    Function to input transition function to the limited automata
+    Will validate the transition function then assign the to the LA if valid
+    """
+    def input_transition_function(self, transition_function):
+        self.validate_transition_function(transition_function)
+
+        # Only assigned if no value error raised from above validation
+        self.transition_function = transition_function
 
 
     """
@@ -65,7 +109,7 @@ class OneLimitedAutomata:
             if not (isinstance(char, str) and len(char) == 1):
                 raise ValueError(f"{char} is not a single-character string.")
         
-        formatted_input_alphabet = list(set(input_alphabet))
+        formatted_input_alphabet = set(input_alphabet)
         
         return formatted_input_alphabet
 
@@ -76,13 +120,17 @@ class OneLimitedAutomata:
     Adds the additional tape symbols to the original input_alphabet and returns this final list
     """
     def create_tape_alphabet(self, input_alphabet):
-        overwrite_symbol = TapeSymbol("X")
-        left_endpoint_symbol = TapeSymbol("<")
-        right_endpoint_symbol = TapeSymbol(">")
+        return {TapeSymbol("<", "endpoint"), TapeSymbol(">", "endpoint"), *input_alphabet}
+    
 
-        tape_alphabet = input_alphabet + [overwrite_symbol, left_endpoint_symbol, right_endpoint_symbol]
-
-        return tape_alphabet
+    """
+    Function that will allow user to add unique characters to the tape alphabet
+    Takes as input a list of chars and inserts them to the set, tape_alphabet
+    """
+    def add_tape_alphabet_characters(self, new_characters):
+        for char, name in new_characters:
+            if char not in [tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)]:
+                self.tape_alphabet.add(TapeSymbol(char, name))
 
 
     """
@@ -133,10 +181,10 @@ class OneLimitedAutomata:
             # Run checks on each part of the transition
             if read_state not in self.states:
                 raise ValueError(f"State {read_state} is not in set of states.")
-            if alphabet_char not in self.tape_alphabet and alphabet_char not in [tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)]:
-                raise ValueError(f"Alphabet character {alphabet_char} not in tape alphabet.")
-            if rewrite not in [tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)]:
-                raise ValueError(f"Rewrite symbol {rewrite} is not in the tape alphabet.")
+            if alphabet_char not in self.input_alphabet and alphabet_char not in {tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)}:
+                raise ValueError(f"Alphabet character {alphabet_char} not in input alphabet")
+            if rewrite not in self.tape_alphabet and rewrite not in {tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)}:
+                raise ValueError(f"Alphabet character {rewrite} not in tape alphabet.")
             if movement not in ["0", "+1", "-1"]:
                 raise ValueError(f"Movement symbol {movement} is not in the valid moves.")
             if resultant_state not in self.states:
@@ -154,12 +202,37 @@ class OneLimitedAutomata:
     """
     def set_current_state(self, state):
         self.current_state = state
+
+
+    """
+    Function that creates the tape
+    Loads the input word onto the tape as well as the left and right endpoint markers
+    Initialises the head position to 1
+    """
+    def create_tape(self, input_word):
+        if not isinstance(input_word, str):
+            raise ValueError("Invalid format for input word")
+        else:
+            self.tape = Tape(input_word)
+
+            # Head position always set to 1. 
+            # N.B. 0 is "<" symbol of the tape
+            self.head_position = 1
+
+
+    """
+    Function that accepts an input word
+    Will call methods to initialise the tape and current state
+    """
+    def load_input_word(self, input_word):
+        self.create_tape(input_word)
+
+        self.set_current_state(self.initial_state)
             
 
     """
-    Function that returns information about the limited automata
+    Function that returns information about the limited automata, including dynamically added attributes
     """
     def return_details(self):
-        print(f"""Details of one limited automata:\n\nTape alphabet: {self.tape_alphabet}\nStates: {self.states}\nCurrent state: {self.current_state}\nTransition function: {self.transition_function}\nAccepting states: {self.accepting_states}\nHalted: {self.halted}\nHead position: {self.head_position}
-        """)
+        return {key: value for key, value in self.__dict__.items()}
                 

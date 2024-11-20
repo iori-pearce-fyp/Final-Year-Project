@@ -1,10 +1,4 @@
 class TapeSymbol:
-    def __init__(self, symbol):
+    def __init__(self, symbol, symbol_name):
         self.symbol = symbol
-        self.symbol_type = self.check_symbol(symbol)
-    
-    def check_symbol(self, symbol):
-        if symbol == "X":
-            return "overwrite"
-        else:
-            return "endpoint"
+        self.symbol_name = symbol_name
