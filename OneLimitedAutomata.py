@@ -54,9 +54,7 @@ class OneLimitedAutomata:
     Will validate the state then assign the initial state to the LA if valid
     """
     def input_initial_state(self, state):
-        self.validate_initial_state(state)
-
-        # Only assigned if no value error raised from above validation
+        # Only assigned if no value error raised from validation method
         self.initial_state = state
 
     
@@ -65,9 +63,7 @@ class OneLimitedAutomata:
     Will validate the states then assign the accepting states to the LA if valid
     """
     def input_accepting_states(self, states):
-        self.validate_accepting_states(states)
-
-        # Only assigned if no value error raised from above validation
+        # Only assigned if no value error raised from validation function
         self.accepting_states = states
 
     
@@ -76,24 +72,16 @@ class OneLimitedAutomata:
     Will validate the transition function then assign the to the LA if valid
     """
     def input_transition_function(self, transition_function):
-        self.validate_transition_function(transition_function)
-
-        # Only assigned if no value error raised from above validation
         self.transition_function = transition_function
 
 
     """
     Function that ensures the input states are valid according to the following:
-    - A list
-    - Each element of the list is a string
+    - A set
     """
     def validate_states(self, states):
-        if not isinstance(states, list):
-            raise ValueError("States are not of type list")
-        
-        for state in states:
-            if not isinstance(state, str):
-                raise ValueError(f"State {state} is not of type str")
+        if not isinstance(states, set):
+            raise ValueError("States are not of type set")
 
         return states
         
@@ -107,7 +95,7 @@ class OneLimitedAutomata:
     def validate_input_alphabet(self, input_alphabet):
         for char in input_alphabet:
             if not (isinstance(char, str) and len(char) == 1):
-                raise ValueError(f"{char} is not a single-character string.")
+                raise ValueError(f"{char} is not a single-character string")
         
         formatted_input_alphabet = set(input_alphabet)
         
@@ -142,7 +130,7 @@ class OneLimitedAutomata:
         if initial_state in self.states:
             return initial_state
         else:
-            raise ValueError("Initial state not in set of states.")
+            return "initial_state_error"
 
     
     """
@@ -153,7 +141,7 @@ class OneLimitedAutomata:
     def validate_accepting_states(self, accepting_states):
         for state in accepting_states:
             if state not in self.states:
-                raise ValueError(f"Accepting state {state} is not in set of states.")
+                return "accepting_state_error"
         
         return accepting_states
 
@@ -175,20 +163,21 @@ class OneLimitedAutomata:
             try:
                 read_state, alphabet_char = current_transition[0].split(" ")
                 rewrite, movement, resultant_state = current_transition[1].split(" ")
-            except ValueError as e:
-                raise ValueError(f"Issue with input of transition function string. Ensure structure is as required")
+            except ValueError:
+                print("HI")
+                return "transition_input_error"
 
             # Run checks on each part of the transition
             if read_state not in self.states:
-                raise ValueError(f"State {read_state} is not in set of states.")
+                return "state_input_error"
             if alphabet_char not in self.input_alphabet and alphabet_char not in {tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)}:
-                raise ValueError(f"Alphabet character {alphabet_char} not in input alphabet")
+                return "char_input_error"
             if rewrite not in self.tape_alphabet and rewrite not in {tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)}:
-                raise ValueError(f"Alphabet character {rewrite} not in tape alphabet.")
+                return "char_input_error"
             if movement not in ["0", "+1", "-1"]:
-                raise ValueError(f"Movement symbol {movement} is not in the valid moves.")
+                return "movement_input_error"
             if resultant_state not in self.states:
-                raise ValueError(f"Resultant state {resultant_state} is not in the valid set of states.")
+                return "state_input_error"
 
             # Use read_state and alphabet_char as the key for transition function dictionary
             resultant_transition_function[(read_state, alphabet_char)] = (rewrite, movement, resultant_state)
