@@ -1,17 +1,21 @@
 import visualisation_utils
 from OneLimitedAutomata import OneLimitedAutomata
 
-"""
-VALID TEST INPUT
-states = ["q_0", "q_1", "q_2"]
+
+# VALID TEST INPUT
+states = {"q_0", "q_1", "q_2"}
 input_alphabet = ["a", "b"]
 transition_function = "q_0 a.X +1 q_1,q_1 a.X +1 q_1,q_1 b.X +1 q_2,q_2 b.X +1 q_2,q_2 >.> +1 q_2"
 initial_state = "q_0"
 accepting_states = ["q_2"] 
-"""
+
 
 def main():
     print("Welcome to the CLI for the 1-LA class\n")
+
+    """
+    # Following code is used when user needs to input all details.
+    For testing purposes, we plug in values for 1LA
 
     la = OneLimitedAutomata()
 
@@ -25,6 +29,15 @@ def main():
     get_input_until_valid(get_transition_function, la)
     get_input_until_valid(get_initial_state, la)
     get_input_until_valid(get_accepting_states, la)
+    """
+
+    la = OneLimitedAutomata()
+    la.input_states(states)
+    la.input_input_alphabet(input_alphabet)
+    la.add_tape_alphabet_characters([("X", "overwrite")])
+    la.input_transition_function(la.validate_transition_function(transition_function))
+    la.input_initial_state(initial_state)
+    la.input_accepting_states(accepting_states)
 
     print("Here are the details of your 1LA")
     print(la.return_details())
@@ -34,8 +47,26 @@ def main():
     if view_graph == "Y":
         visualisation_utils.produce_la_visual_representation(la)
 
+    get_input_until_valid(get_input_word, la)
 
-""""""
+    print(la.tape.output_tape())
+
+    while True:
+        # Prompt the user and check for exit condition
+        user_input = input("Word ready for processing: Press enter to execute one step (or type 'exit' to quit): ")
+        if user_input.lower() == "exit":
+            break
+
+        # Execute one step of the process
+        result = la.process_input_word()
+        if result:
+            print(result)
+            break
+
+    
+
+"""
+"""
 def get_input_until_valid(input_function, la):
     proceed = False
     while not proceed:
@@ -157,6 +188,22 @@ def get_accepting_states(proceed, la):
         if proceed_input == "Y":
             proceed = True
             la.input_accepting_states(accepting_states_input)
+    
+    return proceed 
+
+
+def get_input_word(proceed, la):
+    input_word = input("Please enter a word to be processed by the 1LA: ")
+
+    if not la.validate_input_word(input_word):
+        print("Word rejected as consists of characters not in the input alphabet of the 1LA")
+    else:
+        print("Your input word is: ", input_word)
+        
+        proceed_input = input("If you are happy to proceed, enter Y: ")
+        if proceed_input == "Y":
+                proceed = True
+                la.load_input_word(input_word)
     
     return proceed 
 

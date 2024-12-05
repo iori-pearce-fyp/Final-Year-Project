@@ -164,7 +164,6 @@ class OneLimitedAutomata:
                 read_state, alphabet_char = current_transition[0].split(" ")
                 rewrite, movement, resultant_state = current_transition[1].split(" ")
             except ValueError:
-                print("HI")
                 return "transition_input_error"
 
             # Run checks on each part of the transition
@@ -210,6 +209,17 @@ class OneLimitedAutomata:
 
 
     """
+    Function that will validate the input word
+    Will check the input word chars are contained completely in the alphabet of the 1LA
+    Returns true if valid, false otherwise
+    """
+    def validate_input_word(self, input_word):
+        input_word_chars_set = set(input_word)
+        
+        return input_word_chars_set.issubset(self.input_alphabet)
+
+
+    """
     Function that accepts an input word
     Will call methods to initialise the tape and current state
     """
@@ -217,7 +227,62 @@ class OneLimitedAutomata:
         self.create_tape(input_word)
 
         self.set_current_state(self.initial_state)
-            
+    
+
+    """
+    Function that will run the processing of the word on the 1LA
+    At this point the tape is created with the input word on the tape
+    Initial state and head are assigned correctly
+    """
+    def process_input_word(self):
+        return self.execute_one_step()
+    
+
+    """
+    """
+    def execute_one_step(self):
+        if not self.transition_function.get((self.current_state, (self.tape.tape[self.head_position])), False):
+            # self.halted = True
+            # Reset machine or something
+            return "Word REJECTED!"
+        else:
+            before_step = self.generate_tape_visualisation("Before")
+
+            # Get the three parts of the transition rule
+            write_symbol, movement, new_state = self.transition_function.get((self.current_state, (self.tape.tape[self.head_position])), False)
+
+            self.tape.update_tape(self.head_position, TapeSymbol(write_symbol, "overwrite"))
+            self.update_head_position(movement)
+            self.set_current_state(new_state)
+
+            after_step = self.generate_tape_visualisation("After")
+
+            print(before_step)
+            print(after_step)
+
+            # Execute once whole word has been read
+            if isinstance(self.tape.tape[self.head_position], TapeSymbol):
+                if self.current_state in self.accepting_states and self.tape.tape[self.head_position].symbol_name == "right_endpoint" :
+                    self.halted = True
+                    return "Word ACCEPTED!"
+        
+    """
+    """
+    def update_head_position(self, movement):
+        if movement == "+1":
+            self.head_position += 1
+        else:
+            self.head_position -= 1
+    
+
+    """
+    """
+    def generate_tape_visualisation(self, condition):
+        output_string = f"{condition} execution of step: | "
+        for char in self.tape.tape:
+            output_string += f"{char.symbol if isinstance(char, TapeSymbol) else char} | "
+        return output_string.rstrip(" ")
+        
 
     """
     Function that returns information about the limited automata, including dynamically added attributes
