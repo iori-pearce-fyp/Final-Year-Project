@@ -4,9 +4,6 @@ class State:
             raise ValueError("State input not valid")
         self._state_name = state
     
-    def get_state_name(self):
-        return self._state_name
-    
     def __eq__(self, other):
         # Check if other is also a State and compare the symbol
         if isinstance(other, State):

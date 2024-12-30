@@ -41,7 +41,8 @@ class OneLimitedAutomata:
     Also produces the tape_alphabet if valid
     """
     def input_input_alphabet(self, input_alphabet):
-        self.input_alphabet = self.validate_input_alphabet(input_alphabet)
+        converted_input_alphabet = {InputSymbol(input_symbol) for input_symbol in input_alphabet}
+        self.input_alphabet = self.validate_input_alphabet(converted_input_alphabet)
 
         self.tape_alphabet = self.create_tape_alphabet(self.input_alphabet)
 
@@ -60,8 +61,9 @@ class OneLimitedAutomata:
     Will validate the states then assign the accepting states to the LA if valid
     """
     def input_accepting_states(self, states):
-        # Only assigned if no value error raised from validation function
-        self.accepting_states = self.validate_accepting_states(states)
+        # Convert each raw state into a State object
+        converted_accepting_states = {State(state) for state in states}
+        self.accepting_states = self.validate_accepting_states(converted_accepting_states)
 
     
     """
@@ -93,13 +95,11 @@ class OneLimitedAutomata:
     """
     @staticmethod
     def validate_input_alphabet(input_alphabet):
-        converted_input_alphabet = {InputSymbol(input_symbol) for input_symbol in input_alphabet}
-
-        for input_char in converted_input_alphabet: 
+        for input_char in input_alphabet: 
             if not isinstance(input_char, InputSymbol):
                 raise ValueError("Input states are not of type InputSymbol")
 
-        return converted_input_alphabet
+        return input_alphabet
     
     @staticmethod
     def validate_initial_state(initial_state):
@@ -146,13 +146,10 @@ class OneLimitedAutomata:
     Otherwise, raises an error
     """
     def validate_accepting_states(self, accepting_states):
-        # Convert each raw state into a State object
-        converted_accepting_states = {State(state) for state in accepting_states}
-        
         # Check if the set of accepting states is a subset of self.states
-        if converted_accepting_states.issubset(self.states):
+        if accepting_states.issubset(self.states):
             # Return the accepting states if valid
-            return converted_accepting_states  
+            return accepting_states  
         else:
             # Return error message if not valid
             return "accepting_state_error" 
@@ -233,10 +230,11 @@ class OneLimitedAutomata:
     one_step is a boolean parameter that executes one step if true otherwise whole word 
     """
     def execute(self, input_word, one_step):
-        self.set_current_state(self.initial_state)
-        converted_input_word = [InputSymbol(symbol) for symbol in input_word]
-        self.create_tape(converted_input_word)
-        print(self.tape)
+        if not hasattr(self, 'current_state'):
+            self.set_current_state(self.initial_state)
+        if not hasattr(self, 'tape'):
+            converted_input_word = [InputSymbol(symbol) for symbol in input_word]
+            self.create_tape(converted_input_word)
 
         if one_step:
             print(self.execute_one_step())
