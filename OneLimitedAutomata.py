@@ -1,5 +1,8 @@
 from Tape import Tape
 from TapeSymbol import TapeSymbol
+from InputSymbol import InputSymbol
+from Symbol import Symbol
+from State import State
 
 """
 Class to create the base one limited automata
@@ -19,9 +22,8 @@ Parameters:
 class OneLimitedAutomata:
     
     def __init__(self):
+        # If this parameter is True then the word has been accepted
         self.halted = False
-
-        # self.transition_function = self.validate_transition_function(transition_function)
     
 
     """
@@ -29,10 +31,8 @@ class OneLimitedAutomata:
     Will validate the states then assign the states to the LA if valid
     """
     def input_states(self, states):
-        self.validate_states(states)
-
-        # Only assigned if no value error raised from above validation
-        self.states = states
+        states = {State(state) for state in states}
+        self.states = self.validate_states(states)
     
 
     """
@@ -41,12 +41,9 @@ class OneLimitedAutomata:
     Also produces the tape_alphabet if valid
     """
     def input_input_alphabet(self, input_alphabet):
-        self.validate_input_alphabet(input_alphabet)
+        self.input_alphabet = self.validate_input_alphabet(input_alphabet)
 
-        # Only assigned if no value error raised from above validation
-        self.input_alphabet = input_alphabet
-
-        self.tape_alphabet = self.create_tape_alphabet(input_alphabet)
+        self.tape_alphabet = self.create_tape_alphabet(self.input_alphabet)
 
     
     """
@@ -54,8 +51,8 @@ class OneLimitedAutomata:
     Will validate the state then assign the initial state to the LA if valid
     """
     def input_initial_state(self, state):
-        # Only assigned if no value error raised from validation method
-        self.initial_state = state
+        initial_state = State(state)
+        self.initial_state = self.validate_initial_state(initial_state)
 
     
     """
@@ -64,7 +61,7 @@ class OneLimitedAutomata:
     """
     def input_accepting_states(self, states):
         # Only assigned if no value error raised from validation function
-        self.accepting_states = states
+        self.accepting_states = self.validate_accepting_states(states)
 
     
     """
@@ -72,16 +69,18 @@ class OneLimitedAutomata:
     Will validate the transition function then assign the to the LA if valid
     """
     def input_transition_function(self, transition_function):
-        self.transition_function = transition_function
+        self.transition_function = self.validate_transition_function(transition_function)
 
 
     """
     Function that ensures the input states are valid according to the following:
-    - A set
+    - Of type State
     """
-    def validate_states(self, states):
-        if not isinstance(states, set):
-            raise ValueError("States are not of type set")
+    @staticmethod
+    def validate_states(states):
+        for state in states:
+            if not isinstance(state, State):
+                raise ValueError("States are not of type State")
 
         return states
         
@@ -92,23 +91,30 @@ class OneLimitedAutomata:
     - no repeats of characters
     Returns the list if valid
     """
-    def validate_input_alphabet(self, input_alphabet):
-        for char in input_alphabet:
-            if not (isinstance(char, str) and len(char) == 1):
-                raise ValueError(f"{char} is not a single-character string")
-        
-        formatted_input_alphabet = set(input_alphabet)
-        
-        return formatted_input_alphabet
+    @staticmethod
+    def validate_input_alphabet(input_alphabet):
+        converted_input_alphabet = {InputSymbol(input_symbol) for input_symbol in input_alphabet}
 
+        for input_char in converted_input_alphabet: 
+            if not isinstance(input_char, InputSymbol):
+                raise ValueError("Input states are not of type InputSymbol")
+
+        return converted_input_alphabet
+    
+    @staticmethod
+    def validate_initial_state(initial_state):
+        if not isinstance(initial_state, State):
+            raise ValueError("Initial state is not of type State")
+        return initial_state
 
     """
     Function that takes as input the input_alphabet
     Creates the three additional tape symbols using the TapeSymbol class
     Adds the additional tape symbols to the original input_alphabet and returns this final list
     """
-    def create_tape_alphabet(self, input_alphabet):
-        return {TapeSymbol("<", "endpoint"), TapeSymbol(">", "endpoint"), *input_alphabet}
+    @staticmethod
+    def create_tape_alphabet(input_alphabet):
+        return {TapeSymbol("<"), TapeSymbol(">"), TapeSymbol("X"), *input_alphabet}
     
 
     """
@@ -116,9 +122,9 @@ class OneLimitedAutomata:
     Takes as input a list of chars and inserts them to the set, tape_alphabet
     """
     def add_tape_alphabet_characters(self, new_characters):
-        for char, name in new_characters:
+        for char in new_characters:
             if char not in [tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)]:
-                self.tape_alphabet.add(TapeSymbol(char, name))
+                self.tape_alphabet.add(TapeSymbol(char))
 
 
     """
@@ -127,23 +133,29 @@ class OneLimitedAutomata:
     Otherwise, raises an error
     """
     def validate_initial_state(self, initial_state):
-        if initial_state in self.states:
+        if initial_state in self.states and isinstance(initial_state, State):
             return initial_state
         else:
             return "initial_state_error"
 
     
     """
-    Function that checks if each state in the accepting_states is in the set of states
-    Returns the accepting_states if all valid
+    Function that converts each raw input state to a state object
+    Creates a set of these states
+    Returns the accepting_states if the new set is a subset of the states parameter
     Otherwise, raises an error
     """
     def validate_accepting_states(self, accepting_states):
-        for state in accepting_states:
-            if state not in self.states:
-                return "accepting_state_error"
+        # Convert each raw state into a State object
+        converted_accepting_states = {State(state) for state in accepting_states}
         
-        return accepting_states
+        # Check if the set of accepting states is a subset of self.states
+        if converted_accepting_states.issubset(self.states):
+            # Return the accepting states if valid
+            return converted_accepting_states  
+        else:
+            # Return error message if not valid
+            return "accepting_state_error" 
 
 
     """
@@ -167,19 +179,24 @@ class OneLimitedAutomata:
                 return "transition_input_error"
 
             # Run checks on each part of the transition
-            if read_state not in self.states:
+            if State(read_state) not in self.states:
                 return "state_input_error"
-            if alphabet_char not in self.input_alphabet and alphabet_char not in {tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)}:
+            
+            if Symbol(alphabet_char) not in self.tape_alphabet:
+                print(self.tape_alphabet)
                 return "char_input_error"
-            if rewrite not in self.tape_alphabet and rewrite not in {tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)}:
+            
+            if Symbol(rewrite) not in self.tape_alphabet and rewrite not in {tape_symbol.symbol for tape_symbol in self.tape_alphabet if isinstance(tape_symbol, TapeSymbol)}:
                 return "char_input_error"
-            if movement not in ["0", "+1", "-1"]:
+            
+            if int(movement) not in [0, +1, -1]:
                 return "movement_input_error"
-            if resultant_state not in self.states:
+            
+            if State(resultant_state) not in self.states:
                 return "state_input_error"
 
             # Use read_state and alphabet_char as the key for transition function dictionary
-            resultant_transition_function[(read_state, alphabet_char)] = (rewrite, movement, resultant_state)
+            resultant_transition_function[(State(read_state), Symbol(alphabet_char))] = (Symbol(rewrite), int(movement), State(resultant_state))
         
         return resultant_transition_function
 
@@ -198,7 +215,8 @@ class OneLimitedAutomata:
     Initialises the head position to 1
     """
     def create_tape(self, input_word):
-        if not isinstance(input_word, str):
+        # Check that the input_word is a list of symbols before creating the tape
+        if not all(isinstance(symbol, Symbol) for symbol in input_word):
             raise ValueError("Invalid format for input word")
         else:
             self.tape = Tape(input_word)
@@ -206,65 +224,72 @@ class OneLimitedAutomata:
             # Head position always set to 1. 
             # N.B. 0 is "<" symbol of the tape
             self.head_position = 1
-
-
-    """
-    Function that will validate the input word
-    Will check the input word chars are contained completely in the alphabet of the 1LA
-    Returns true if valid, false otherwise
-    """
-    def validate_input_word(self, input_word):
-        input_word_chars_set = set(input_word)
-        
-        return input_word_chars_set.issubset(self.input_alphabet)
-
-
-    """
-    Function that accepts an input word
-    Will call methods to initialise the tape and current state
-    """
-    def load_input_word(self, input_word):
-        self.create_tape(input_word)
-
-        self.set_current_state(self.initial_state)
     
 
     """
     Function that will run the processing of the word on the 1LA
-    At this point the tape is created with the input word on the tape
-    Initial state and head are assigned correctly
+    Intialises the tape and the head position
+    Executes the word on the automata
+    one_step is a boolean parameter that executes one step if true otherwise whole word 
     """
-    def process_input_word(self):
-        return self.execute_one_step()
-    
+    def execute(self, input_word, one_step):
+        self.set_current_state(self.initial_state)
+        converted_input_word = [InputSymbol(symbol) for symbol in input_word]
+        self.create_tape(converted_input_word)
+        print(self.tape)
 
-    """
-    """
+        if one_step:
+            print(self.execute_one_step())
+        else:
+            not_recognised = False
+            while self.halted != True:
+                if not self.execute_one_step():
+                    not_recognised = True
+                    break
+            if not_recognised:
+                return False
+            else:
+                return True
+
+
+
+
     def execute_one_step(self):
         if not self.transition_function.get((self.current_state, (self.tape.tape[self.head_position])), False):
-            # self.halted = True
-            # Reset machine or something
-            return "Word REJECTED!"
+            return False
         else:
-            before_step = self.generate_tape_visualisation("Before")
+            # before_step = self.generate_tape_visualisation("Before")
 
             # Get the three parts of the transition rule
             write_symbol, movement, new_state = self.transition_function.get((self.current_state, (self.tape.tape[self.head_position])), False)
 
-            self.tape.update_tape(self.head_position, TapeSymbol(write_symbol, "overwrite"))
+            self.tape.update_tape(self.head_position, TapeSymbol(write_symbol))
             self.update_head_position(movement)
             self.set_current_state(new_state)
 
-            after_step = self.generate_tape_visualisation("After")
+            if self.check_current_state_in_accepting_states() and self.head_position == len(self.tape) - 1:
+                self.halted == True
 
-            print(before_step)
-            print(after_step)
+            # after_step = self.generate_tape_visualisation("After")
 
-            # Execute once whole word has been read
-            if isinstance(self.tape.tape[self.head_position], TapeSymbol):
-                if self.current_state in self.accepting_states and self.tape.tape[self.head_position].symbol_name == "right_endpoint" :
-                    self.halted = True
-                    return "Word ACCEPTED!"
+            # print(before_step)
+            # print(after_step)
+            return True
+
+
+    def recognises(self, input_word):
+        print(self.execute(input_word, False))
+
+        # Execute whole thing and return True or False. Assume for now that the machine will not infinitely loop
+
+    def check_current_state_in_accepting_states(self):
+        if self.current_state in self.accepting_states:
+            return True
+        else:
+            return False
+        
+        
+
         
     """
     """
