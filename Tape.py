@@ -16,6 +16,11 @@ class Tape:
                 output_str += f"{symbol}, " 
         return output_str.rstrip(", ") + "]"
 
-
+    """
+    Function that updates the tape
+    Takes the following parameters:
+    - index: Index position of the tape that needs updating
+    - overwrite_char: Character that will be written at the index position
+    """
     def update_tape(self, index, overwrite_char):
         self.tape[index] = overwrite_char
