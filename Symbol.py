@@ -1,7 +1,6 @@
 class Symbol:
-    def __init__(self, symbol, marked=False):
+    def __init__(self, symbol):
         self.symbol = symbol
-        self.marked = marked
 
     def __eq__(self, other):
         if isinstance(other, Symbol):

@@ -23,11 +23,11 @@ Parameters:
 class OneLimitedAutomata_rework:
     
     # Constructor function, used to initialise the machine
-    def __init__(self, states = set(), initial_state = None, accepting_states = set(), sigma = set(), gamma = set(), delta = {}):
+    def __init__(self, states = set(), initial_state = None, accepting_states = set(), Σ = set(), Γ = set(), δ = {}):
         # boolean variable used to track state of machine
         self.halted = False
         # transition function
-        self.delta = {}
+        self.δ = {}
         # set of states of the machine
         self.states = set()
         # the initial state of the machine
@@ -35,19 +35,19 @@ class OneLimitedAutomata_rework:
         # set of accepting states of the machine
         self.accepting_states = set()
         # alphabet representing the input symbols
-        self.sigma = set()
+        self.Σ = set()
         # alphabet representing the tape symbols (note that the two end marker symbols are always initialised. Can add anything else on top of them)
-        self.gamma = set([TapeSymbol("<"), TapeSymbol(">")])
+        self.Γ = set([TapeSymbol("<"), TapeSymbol(">")])
 
-        self.run_setup(states, initial_state, accepting_states, sigma, gamma, delta)
+        self.run_setup(states, initial_state, accepting_states, Σ, Γ, δ)
     
-    def run_setup(self, states, initial_state, accepting_states, sigma, gamma, delta):
+    def run_setup(self, states, initial_state, accepting_states, Σ, Γ, δ):
         self.add_states(states)
         self.add_initial_state(initial_state)
         self.add_accepting_states(accepting_states)
-        self.add_input_symbols(sigma)
-        self.add_tape_symbols(gamma)
-        self.add_transitions(delta)
+        self.add_input_symbols(Σ)
+        self.add_tape_symbols(Γ)
+        self.add_transitions(δ)
     
     
 
@@ -96,34 +96,34 @@ class OneLimitedAutomata_rework:
     def add_input_symbols(self, input_symbols):
         # convert raw symbols into InputSymbol objects
         symbols = [InputSymbol(input_symbol) for input_symbol in input_symbols]
-        # add each symbol to the machine's sigma variable
+        # add each symbol to the machine's Σ variable
         for symbol in symbols:
             # check that the symbol is not already being used in the other alphabet
-            if symbol not in self.gamma:
-                self.sigma.add(symbol)
+            if symbol not in self.Γ:
+                self.Σ.add(symbol)
     
     def add_tape_symbols(self, tape_symbols):
         # convert raw symbols into InputSymbol objects
         symbols = [TapeSymbol(tape_symbol) for tape_symbol in tape_symbols]
-        # add each symbol to the machine's sigma variable
+        # add each symbol to the machine's Σ variable
         for symbol in symbols:
             # check that the symbol is not already being used in the other alphabet
-            if symbol not in self.delta:
-                self.gamma.add(symbol)
+            if symbol not in self.δ:
+                self.Γ.add(symbol)
 
     def remove_input_symbols(self, input_symbols):
         # convert raw symbols into InputSymbol objects
         symbols = [InputSymbol(input_symbol) for input_symbol in input_symbols]
-        # add each symbol to the machine's sigma variable
+        # add each symbol to the machine's Σ variable
         for symbol in symbols:
-            self.sigma.remove(symbol)
+            self.Σ.remove(symbol)
 
     def remove_tape_symbols(self, tape_symbols):
         # convert raw symbols into InputSymbol objects
         symbols = [TapeSymbol(tape_symbol) for tape_symbol in tape_symbols]
-        # add each symbol to the machine's sigma variable
+        # add each symbol to the machine's Σ variable
         for symbol in symbols:
-            self.gamma.remove(symbol)
+            self.Γ.remove(symbol)
 
 
     # Code lifted from https://www.dcc.fc.up.pt/~rvr/FAdoDoc/_modules/FAdo/fa.html#DFA.addTransition
@@ -139,12 +139,12 @@ class OneLimitedAutomata_rework:
     #     if sym == Epsilon:
     #         raise DFAnotNFA("Invalid Epsilon transition from {0:>s} to {1:>s}.".format(str(sti1), str(sti2)))
     #     self.Sigma.add(sym)
-    #     if sti1 not in self.delta:
-    #         self.delta[sti1] = {sym: sti2}
+    #     if sti1 not in self.δ:
+    #         self.δ[sti1] = {sym: sti2}
     #     else:
-    #         if sym in self.delta[sti1] and self.delta[sti1][sym] is not sti2:
+    #         if sym in self.δ[sti1] and self.δ[sti1][sym] is not sti2:
     #             raise DFAnotNFA("extra transition from ({0:>s}, {1:>s})".format(str(sti1), sym))
-    #         self.delta[sti1][sym] = sti2
+    #         self.δ[sti1][sym] = sti2
 
     def add_transitions(self, transitions):
         for transition in transitions:
@@ -162,11 +162,11 @@ class OneLimitedAutomata_rework:
                     # Get the 0 or 1 value that represents whether the symbol is of type InputSymbol (0) or type TapeSymbol (1)
                     symbol_type = self.get_symbol_type(symbol)
                     # check if the departure_state and symbol tuple does not already exist in the transition function to ensure non-deterministic behaviour is not allowed
-                    if ((State(departure_state), Symbol(symbol))) not in self.delta:
-                        if symbol_type == "sigma":
-                            self.delta[(State(departure_state), InputSymbol(symbol))] = (State(arrival_state), TapeSymbol(rewrite_symbol), direction)
-                        elif symbol_type == "gamma":
-                            self.delta[(State(departure_state), TapeSymbol(symbol))] = (State(arrival_state), TapeSymbol(rewrite_symbol), direction)
+                    if ((State(departure_state), Symbol(symbol))) not in self.δ:
+                        if symbol_type == "Σ":
+                            self.δ[(State(departure_state), InputSymbol(symbol))] = (State(arrival_state), TapeSymbol(rewrite_symbol), direction)
+                        elif symbol_type == "Γ":
+                            self.δ[(State(departure_state), TapeSymbol(symbol))] = (State(arrival_state), TapeSymbol(rewrite_symbol), direction)
                     else:
                         print(f"Attempted new transition: ({departure_state}, {symbol}) violates non-determinism of the machine")
                 else:
@@ -177,16 +177,16 @@ class OneLimitedAutomata_rework:
     # function that removes a transition if it exists in the transition function
     def remove_transition(self, departure_state, symbol):
         # discard function on sets will not raise an error if the key is not found
-        self.delta.pop((State(departure_state), Symbol(symbol)), None)
+        self.δ.pop((State(departure_state), Symbol(symbol)), None)
     
 
     def get_symbol_type(self, symbol_to_validate):
         symbol = Symbol(symbol_to_validate) 
         # loop through each of the tape and input symbols and return symbol type
-        if symbol in self.sigma:
-            return "sigma" 
+        if symbol in self.Σ:
+            return "Σ" 
         else:
-            return "gamma"
+            return "Γ"
         
     # function used to initialise the tape and must occur before processing (can be resued with new input words)
     def set_tape(self, input_word):
@@ -209,14 +209,17 @@ class OneLimitedAutomata_rework:
         else:
             # while the machine has not halted
             while(not self.halted):
+                print("Head index: ", self.head)
+                print("Current state: ", self.current_state)
+                print(self.tape.return_tape())
                 # if the index of the head has not exceeded the tape length
                 if self.head != len(self.tape.tape):
                     # assign the currently being read symbol to the variable symbol_reading
                     symbol_reading = self.tape.tape[self.head]
                     # if there exists a valid transition in the transition function
-                    if ((self.current_state, symbol_reading)) in self.delta:
+                    if ((self.current_state, symbol_reading)) in self.δ:
                         # get the values for the three below parameters from the transition function dictionary
-                        arrival_state, overwrite_symbol, direction = self.delta[(self.current_state, symbol_reading)]
+                        arrival_state, overwrite_symbol, direction = self.δ[(self.current_state, symbol_reading)]
 
                         # update the current state to the arrival_state
                         self.current_state = arrival_state
@@ -256,7 +259,7 @@ class OneLimitedAutomata_rework:
     def check_valid_symbol(self, symbol_to_validate):
         symbol = Symbol(symbol_to_validate) 
         # loop through each of the tape and input symbols and return true if in either or false otherwise
-        if symbol in self.sigma or symbol in self.gamma:
+        if symbol in self.Σ or symbol in self.Γ:
             return True 
         else:
             return False
@@ -285,23 +288,23 @@ class OneLimitedAutomata_rework:
         states_string = "\n".join(str(state) for state in self.accepting_states)
         return states_string
     
-    # function that returns the current input alphabet (sigma)
-    def return_sigma(self):
-        symbols_string = "\n".join(str(symbol) for symbol in self.sigma)
+    # function that returns the current input alphabet (Σ)
+    def return_Σ(self):
+        symbols_string = "\n".join(str(symbol) for symbol in self.Σ)
         return symbols_string
 
-    # function that returns the current tape alphabet (gamma)
-    def return_gamma(self):
-        symbols_string = "\n".join(str(symbol) for symbol in self.gamma)
+    # function that returns the current tape alphabet (Γ)
+    def return_Γ(self):
+        symbols_string = "\n".join(str(symbol) for symbol in self.Γ)
         return symbols_string
 
-    # functiont that returns the current tape alphabet (gamma)
+    # functiont that returns the current tape alphabet (Γ)
     
     # function that returns the current transition function
     def return_transition_function(self):
         transitions_string = "\n".join(
             "(" + str(key[0]) + ", " + str(key[1]) + ") => (" + str(value[0]) + ", " + str(value[1]) + ", " + str(value[2]) + ")"
-            for key, value in self.delta.items()
+            for key, value in self.δ.items()
         )
 
         return transitions_string
