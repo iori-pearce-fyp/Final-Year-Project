@@ -2,14 +2,9 @@ class Symbol:
     def __init__(self, symbol):
         self.symbol = symbol
 
-
-    """
-    Function that will see if a different Symbol object has the same symbol
-    Returns True if they do and False otherwise
-    """
-    def __eq__(self, value):
-        if isinstance(value, Symbol):
-            return self.symbol == value.symbol
+    def __eq__(self, other):
+        if isinstance(other, Symbol):
+            return self.symbol == other.symbol
         return False
 
 
@@ -24,4 +19,4 @@ class Symbol:
     Function that returns string representation of the object
     """
     def __str__(self):
-        return f"Symbol: {self.symbol}"
+        return self.symbol

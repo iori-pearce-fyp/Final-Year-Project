@@ -1,9 +1,6 @@
 class State:
     def __init__(self, state):
-        if not isinstance(state, str):
-            raise ValueError("State input not valid")
         self._state_name = state
-    
 
     """
     Function that will see if a different State object has the same state name
@@ -21,3 +18,10 @@ class State:
     """
     def __hash__(self):
         return hash(self._state_name)
+    
+
+    """
+    Function that will return the string name of the State symbol
+    """
+    def __str__(self):
+        return self._state_name
